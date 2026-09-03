@@ -175,4 +175,4 @@ docker compose exec app sh -c "bun run setup:db"
 
 ## License
 
-TBD
+Released under the [MIT License](LICENSE).
