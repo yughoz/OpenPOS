@@ -1,0 +1,45 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Local runtime data
+/data
+/pocketbase/pb_data
+
+# PocketBase binaries & auto-generated migrations (schema dikelola setup:db)
+/pocketbase/pb_migrations
+# PocketBase binaries
+/bin/
+/pocketbase/pocketbase
+/pocketbase-auth/pb
+/pocketbase-auth/pb_data
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Data & script migrasi legacy — lokal saja (jangan di-push)
+/scripts/import-legacy.ts
+/pocketbase/pb_data_dev_test_backup
+/pocketbase/pb_data_import

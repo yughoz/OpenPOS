@@ -1,0 +1,14 @@
+{
+	"$schema": "https://inlang.com/schema/project-settings",
+	"sourceLanguageTag": "id",
+	"languageTags": ["id", "en"],
+	"modules": [
+		"https://cdn.jsdelivr.net/npm/@inlang/plugin-message-format@latest/dist/index.js"
+	],
+	"plugin.inlang.paraglide": {
+		"messageOutputPath": "./src/lib/paraglide/messages.ts"
+	},
+	"plugin.inlang.messageFormat": {
+		"pathPattern": "./messages.inlang/{languageTag}.json"
+	}
+}
