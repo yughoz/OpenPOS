@@ -5,6 +5,17 @@ A free & open-source, web-based Point of Sale (POS) application for small-to-med
 > [!NOTE]
 > The AI assistant and all money/profit calculations are **read-only**: the assistant can never modify your data, and profit figures use the *cost price snapshot* taken at sale time, so later cost edits never distort historical reports.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Cashier POS](docs/screenshots/pos.png) |
+| **Dashboard** | **Cashier (POS)** |
+| ![Products](docs/screenshots/products.png) | ![Sales report](docs/screenshots/sales-report.png) |
+| **Products** | **Sales report** |
+| ![AI assistant](docs/screenshots/ai-assistant.png) | ![Login](docs/screenshots/login.png) |
+| **AI assistant (read-only)** | **Login** |
+
 ## Features
 
 **Cashier (POS)**
