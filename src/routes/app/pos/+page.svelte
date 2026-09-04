@@ -17,7 +17,8 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import BanknoteIcon from '@lucide/svelte/icons/banknote';
 	import * as m from '$lib/paraglide/messages.js';
-	import { formatNumber } from '$lib/utils';
+	import { formatNumber, formatRupiah } from '$lib/utils';
+	import { currency } from '$lib/currency.svelte';
 	import type { CartSnapshot } from '$lib/server/pos';
 	import type { OptionItem } from '$lib/types';
 
@@ -255,7 +256,7 @@
 				paid = '';
 				method = 'cash';
 				if (d.receipt) {
-					toast.success(m['pos.done_toast']({ change: formatNumber(d.change ?? 0) }));
+					toast.success(m['pos.done_toast']({ change: formatRupiah(d.change ?? 0) }));
 					if (printNext === '1') await goto(`/app/pos/receipt/${d.receipt}?print=1`, { replaceState: true });
 					else await goto('/app/pos?tx=none', { replaceState: true });
 				}
@@ -378,7 +379,7 @@
 										{p.name}
 									</span>
 									<span class="whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-										Rp {formatNumber(p.sell_price)} · {m['pos.stock_n']({ n: p.stock })}
+										{formatRupiah(p.sell_price)} · {m['pos.stock_n']({ n: p.stock })}
 									</span>
 								</button>
 							{/each}
@@ -563,7 +564,7 @@
 					<form method="POST" action="?/setDiscount" use:enhance={discountEnhance()} class="flex items-end gap-2">
 						<input type="hidden" name="tx_id" value={cart?.id ?? ''} />
 						<div class="grid flex-1 gap-1">
-							<Label class="text-xs" for="discount">{m['pos.discount_label']()}</Label>
+							<Label class="text-xs" for="discount">{m['pos.discount_label']({ symbol: currency.symbol })}</Label>
 							<Input id="discount" name="discount" type="number" min="0" value={String(cart?.total_discount ?? 0)} disabled={!cart} class="h-8" />
 						</div>
 						<Button type="submit" variant="outline" size="sm" class="h-8" disabled={!cart}>{m['pos.apply']()}</Button>
@@ -578,7 +579,7 @@
 					{#if data.customerDebt > 0}
 						<div class="flex justify-between text-xs text-amber-700 dark:text-amber-400">
 							<span>{m['pos.debt_of']({ name: cartCustomerName })}</span>
-							<span class="tabular-nums">+Rp {formatNumber(data.customerDebt)}</span>
+							<span class="tabular-nums">+{formatRupiah(data.customerDebt)}</span>
 						</div>
 					{/if}
 					{#if (cart?.total_discount ?? 0) > 0}
@@ -589,7 +590,7 @@
 					{/if}
 					<div class="flex justify-between text-base font-bold">
 						<span>{m['pos.total_pay']()}</span>
-						<span class="tabular-nums">Rp {formatNumber(totalBayar)}</span>
+						<span class="tabular-nums">{formatRupiah(totalBayar)}</span>
 					</div>
 				</CardContent>
 			</Card>
@@ -614,7 +615,7 @@
 							</Select.Root>
 						</div>
 						<div class="grid gap-1">
-							<Label class="text-xs" for="paid-input">{m['pos.paid_amount']()}</Label>
+							<Label class="text-xs" for="paid-input">{m['pos.paid_amount']({ symbol: currency.symbol })}</Label>
 							<Input id="paid-input" bind:ref={paidEl} bind:value={paid} type="number" min="0" class="h-8 text-right" placeholder={String(totalBayar)} />
 						</div>
 					</div>
@@ -632,19 +633,19 @@
 						<div class="flex justify-between rounded-lg bg-muted px-3 py-1.5 text-sm">
 							<span class="text-muted-foreground">{m['pos.change']()}</span>
 							<span class="font-bold tabular-nums {changeNum < 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'}">
-								Rp {formatNumber(Math.max(0, changeNum))}
+								{formatRupiah(Math.max(0, changeNum))}
 							</span>
 						</div>
 					{:else}
 						<div class="flex justify-between rounded-lg bg-muted px-3 py-1.5 text-sm">
 							<span class="text-muted-foreground">{m['pos.paid_with']({ method: methodLabel[method] })}</span>
-							<span class="font-bold tabular-nums">Rp {formatNumber(totalBayar)}</span>
+							<span class="font-bold tabular-nums">{formatRupiah(totalBayar)}</span>
 						</div>
 					{/if}
 					{#if method === 'cash' && paidNum < totalBayar}
 						<p class="text-xs {cart?.customer ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground'}">
 							{#if cart?.customer}
-								{m['pos.shortage_debt']({ amount: formatNumber(totalBayar - paidNum), name: customerLabel(cart.customer) })}
+								{m['pos.shortage_debt']({ amount: formatRupiah(totalBayar - paidNum), name: customerLabel(cart.customer) })}
 							{:else}
 								{m['pos.shortage_no_customer']()}
 							{/if}

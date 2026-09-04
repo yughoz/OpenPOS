@@ -19,6 +19,7 @@
 		store_name: m['settings.store_name'](),
 		store_description: m['settings.store_description'](),
 		store_phone: m['settings.store_phone'](),
+		currency_symbol: m['settings.currency_symbol'](),
 		prefix_nota: m['settings.prefix_nota'](),
 		prefix_barcode: m['settings.prefix_barcode'](),
 		receipt_size: m['settings.receipt_size'](),
@@ -28,6 +29,7 @@
 		store_name: m['settings.ph_store_name'](),
 		store_description: m['settings.ph_store_description'](),
 		store_phone: m['settings.ph_store_phone'](),
+		currency_symbol: m['settings.ph_currency_symbol'](),
 		prefix_nota: m['settings.ph_prefix_nota'](),
 		prefix_barcode: m['settings.ph_prefix_barcode'](),
 		receipt_footer: m['settings.ph_receipt_footer']()

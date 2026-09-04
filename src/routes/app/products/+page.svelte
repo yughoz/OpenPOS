@@ -19,6 +19,7 @@
 	import UploadIcon from '@lucide/svelte/icons/upload';
 	import BarcodeIcon from '@lucide/svelte/icons/barcode';
 	import * as m from '$lib/paraglide/messages.js';
+	import { currency } from '$lib/currency.svelte';
 	import { formatNumber } from '$lib/utils';
 
 	interface ProductRow {
@@ -364,17 +365,17 @@
 				</div>
 				<div class="grid grid-cols-2 gap-4">
 					<div class="grid gap-2">
-						<Label for="c-sell">{m['products.field_sell_price']()}</Label>
+						<Label for="c-sell">{m['products.field_sell_price']({ symbol: currency.symbol })}</Label>
 						<Input id="c-sell" name="sell_price" bind:value={cSell} type="number" min="1" required placeholder="15000" />
 					</div>
 					<div class="grid gap-2">
-						<Label for="c-cost">{m['products.field_cost_price']()}</Label>
+						<Label for="c-cost">{m['products.field_cost_price']({ symbol: currency.symbol })}</Label>
 						<Input id="c-cost" name="cost_price" bind:value={cCost} type="number" min="0" placeholder="12000" />
 					</div>
 				</div>
 				<div class="grid grid-cols-2 gap-4">
 					<div class="grid gap-2">
-						<Label for="c-wholesale">{m['products.field_wholesale']()}</Label>
+						<Label for="c-wholesale">{m['products.field_wholesale']({ symbol: currency.symbol })}</Label>
 						<Input id="c-wholesale" name="wholesale_price" bind:value={cWholesale} type="number" min="0" placeholder="14000" />
 					</div>
 					<div class="grid grid-cols-2 gap-4">
@@ -450,11 +451,11 @@
 					</div>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="grid gap-2">
-							<Label for="e-sell">{m['products.field_sell_price']()}</Label>
+							<Label for="e-sell">{m['products.field_sell_price']({ symbol: currency.symbol })}</Label>
 							<Input id="e-sell" name="sell_price" bind:value={eSell} type="number" min="1" required />
 						</div>
 						<div class="grid gap-2">
-							<Label for="e-cost">{m['products.field_cost_price']()}</Label>
+							<Label for="e-cost">{m['products.field_cost_price']({ symbol: currency.symbol })}</Label>
 							<Input id="e-cost" name="cost_price" bind:value={eCost} type="number" min="0" />
 						</div>
 					</div>

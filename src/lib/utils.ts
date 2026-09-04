@@ -2,6 +2,7 @@
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatMoney } from '$lib/currency.svelte';
 
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, 'child'> : T;
 export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, 'children'> : T;
@@ -19,9 +20,9 @@ export function formatNumber(value: number | null | undefined): string {
 	return rupiahFormatter.format(Number(value ?? 0));
 }
 
-/** Format jadi rupiah: 15000 → "Rp 15.000". */
+/** Format jadi mata uang mengikuti simbol di Settings: 15000 → "Rp 15.000". */
 export function formatRupiah(value: number | null | undefined): string {
-	return `Rp ${formatNumber(value)}`;
+	return formatMoney(value);
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('id-ID', {

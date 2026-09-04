@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
@@ -6,16 +7,19 @@
 	import * as Select from '$lib/components/ui/select';
 	import StockMovementsTable from '$lib/components/stock-movements-table.svelte';
 	import SearchIcon from '@lucide/svelte/icons/search';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
+	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import * as m from '$lib/paraglide/messages.js';
 	import type { MovementRow, OptionItem } from '$lib/types';
 	import { formatNumber } from '$lib/utils';
 
 	let { data } = $props<{
 		data: {
-			movements: { items: MovementRow[]; totalItems: number };
+			movements: { items: MovementRow[]; totalItems: number; totalPages: number; page: number };
 			products: { items: Array<{ id: string; name: string }> };
 			filters: { from: string; to: string; type: string; productId: string };
 			summary: { totalIn: number; totalOut: number };
+			perPage: number;
 		};
 	}>();
 
@@ -28,6 +32,16 @@
 	function productName(value: string): string {
 		if (value === NONE) return m['stockReport.all_products']();
 		return data.products.items.find((p: { id: string; name: string }) => p.id === value)?.name ?? '—';
+	}
+
+	function goToPage(p: number) {
+		const params = new URLSearchParams();
+		if (data.filters.from) params.set('from', data.filters.from);
+		if (data.filters.to) params.set('to', data.filters.to);
+		if (data.filters.type !== 'all') params.set('type', data.filters.type);
+		if (data.filters.productId) params.set('product', data.filters.productId);
+		params.set('page', String(p));
+		goto(`?${params.toString()}`);
 	}
 	const typeLabel: Record<string, string> = {
 		all: m['stockReport.type_all'](),
@@ -115,7 +129,24 @@
 
 	<StockMovementsTable rows={data.movements.items} emptyText={m['stockReport.empty']()} />
 
-	{#if data.movements.totalItems > 200}
-		<p class="text-sm text-muted-foreground">{m['stockReport.truncated']({ n: data.movements.totalItems })}</p>
-	{/if}
+	<div class="flex items-center justify-between text-sm text-muted-foreground">
+		<span>{m['stockReport.count']({ n: data.movements.totalItems })}</span>
+		{#if data.movements.totalPages > 1}
+			<div class="flex items-center gap-2">
+				<Button variant="outline" size="icon" class="size-8" disabled={data.movements.page <= 1} onclick={() => goToPage(data.movements.page - 1)}>
+					<ChevronLeftIcon class="size-4" />
+				</Button>
+				<span>{data.movements.page} / {data.movements.totalPages}</span>
+				<Button
+					variant="outline"
+					size="icon"
+					class="size-8"
+					disabled={data.movements.page >= data.movements.totalPages}
+					onclick={() => goToPage(data.movements.page + 1)}
+				>
+					<ChevronRightIcon class="size-4" />
+				</Button>
+			</div>
+		{/if}
+	</div>
 </div>

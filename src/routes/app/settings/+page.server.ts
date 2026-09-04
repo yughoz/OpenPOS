@@ -10,6 +10,7 @@ const _FIELDS = [
 	{ key: 'store_name', max: 30 },
 	{ key: 'store_description', max: 70 },
 	{ key: 'store_phone', max: 30 },
+	{ key: 'currency_symbol', max: 6 },
 	{ key: 'prefix_nota', max: 6 },
 	{ key: 'prefix_barcode', max: 6 },
 	{ key: 'receipt_size', max: 3 },

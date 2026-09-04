@@ -327,9 +327,11 @@ const TOOLS = [
 
 async function buildSystemPrompt(token: string): Promise<string> {
 	const storeName = await getSetting(token, 'store_name', 'OpenPOS');
+	const currencySymbol = await getSetting(token, 'currency_symbol', 'Rp');
 	return [
 		`Kamu adalah "Asisten AI" di dalam aplikasi kasir OpenPOS milik toko "${storeName}".`,
 		`Tanggal hari ini: ${dayKey(new Date())} (zona waktu server). "Bulan ini" = dari tanggal 1 bulan berjalan sampai hari ini.`,
+		`Simbol mata uang toko: "${currencySymbol}" — gunakan simbol ini saat menyebut nominal.`,
 		'',
 		'ATURAN WAJIB:',
 		'1. TOPIK KAMU TERBATAS: kamu HANYA menjawab seputar toko ini dan data POS-nya — penjualan, omzet, laba, produk, stok, hutang/piutang, customer, kasir, laporan, serta cara memakai aplikasi OpenPOS.',

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { formatDateTime, formatNumber } from '$lib/utils';
+	import { formatDateTime, formatNumber, formatRupiah } from '$lib/utils';
 
 	let { data } = $props<{
 		data: {
@@ -108,7 +108,7 @@
 		{/if}
 		<div class="flex justify-between text-sm font-bold">
 			<span>TOTAL</span>
-			<span class="tabular-nums">Rp {formatNumber(data.tx.total_final)}</span>
+			<span class="tabular-nums">{formatRupiah(data.tx.total_final)}</span>
 		</div>
 		<div class="flex justify-between">
 			<span>Bayar ({methodLabel[data.tx.payment_method] ?? data.tx.payment_method})</span>

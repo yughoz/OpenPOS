@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import PrintIcon from '@lucide/svelte/icons/printer';
 	import * as m from '$lib/paraglide/messages.js';
-	import { formatNumber } from '$lib/utils';
+	import { formatNumber, formatRupiah } from '$lib/utils';
 
 	let { data } = $props<{
 		data: {
@@ -53,7 +53,7 @@
 		{#each Array(data.copies) as _, i (i)}
 			<div class="flex h-[30mm] w-[40mm] flex-col items-center justify-center border border-dashed border-neutral-400 px-1 print:border-neutral-400">
 				<div class="w-full truncate text-center text-[10px] font-semibold uppercase leading-tight">{data.product.name}</div>
-				<div class="text-[11px] font-bold">Rp {formatNumber(data.product.price)}</div>
+				<div class="text-[11px] font-bold">{formatRupiah(data.product.price)}</div>
 				<svg data-barcode={data.product.barcode}></svg>
 			</div>
 		{/each}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatNumber } from '$lib/utils';
+	import { formatMoney } from '$lib/currency.svelte';
 
 	let {
 		data,
@@ -18,7 +18,7 @@
 	<div class="flex flex-col gap-2">
 		<div class="flex {height} items-end gap-1">
 			{#each data as d (d.label)}
-				<div class="flex h-full flex-1 flex-col justify-end" title="{d.label}: Rp {formatNumber(d.value)}">
+				<div class="flex h-full flex-1 flex-col justify-end" title="{d.label}: {formatMoney(d.value)}">
 					<div
 						class="w-full rounded-t bg-primary/80 transition-all hover:bg-primary"
 						style="height: {Math.max(2, Math.round((d.value / max) * 100))}%"

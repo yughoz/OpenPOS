@@ -9,7 +9,8 @@
 	import * as Select from '$lib/components/ui/select';
 	import HandCoinsIcon from '@lucide/svelte/icons/hand-coins';
 	import * as m from '$lib/paraglide/messages.js';
-	import { formatDateTime, formatNumber } from '$lib/utils';
+	import { formatDateTime, formatNumber, formatRupiah } from '$lib/utils';
+	import { currency } from '$lib/currency.svelte';
 
 	interface DebtItem {
 		id: string;
@@ -87,7 +88,7 @@
 		<button class="text-left" onclick={() => (bayarDebt = null)}>
 			<div class="rounded-xl border bg-card p-4 shadow-sm">
 				<div class="text-sm text-muted-foreground">{m['debts.total_outstanding']()}</div>
-				<div class="mt-1 text-2xl font-bold tabular-nums text-destructive">Rp {formatNumber(data.summary.totalPiutang)}</div>
+				<div class="mt-1 text-2xl font-bold tabular-nums text-destructive">{formatRupiah(data.summary.totalPiutang)}</div>
 			</div>
 		</button>
 		<div class="rounded-xl border bg-card p-4 shadow-sm">
@@ -156,14 +157,14 @@
 			<Dialog.Header>
 				<Dialog.Title>{m['debts.pay_title']()}</Dialog.Title>
 				<Dialog.Description>
-					{m['debts.pay_desc']({ name: bayarDebt.expand?.customer?.name ?? m['pos.customer'](), remaining: formatNumber(bayarDebt.sisa) })}
+					{m['debts.pay_desc']({ name: bayarDebt.expand?.customer?.name ?? m['pos.customer'](), remaining: formatRupiah(bayarDebt.sisa) })}
 				</Dialog.Description>
 			</Dialog.Header>
 			<form method="POST" action="?/pay" use:enhance={payEnhance()}>
 				<input type="hidden" name="debt_id" value={bayarDebt.id} />
 				<div class="grid gap-4 py-2">
 					<div class="grid gap-2">
-						<Label for="pay-amount">{m['debts.pay_amount']()}</Label>
+						<Label for="pay-amount">{m['debts.pay_amount']({ symbol: currency.symbol })}</Label>
 						<Input id="pay-amount" name="amount" bind:value={bayarAmount} type="number" min="1" max={bayarDebt.sisa} required />
 					</div>
 					<div class="grid gap-2">

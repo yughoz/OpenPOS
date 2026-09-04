@@ -14,7 +14,7 @@
 	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import BanIcon from '@lucide/svelte/icons/ban';
 	import * as m from '$lib/paraglide/messages.js';
-	import { formatDateTime, formatNumber } from '$lib/utils';
+	import { formatDateTime, formatNumber, formatRupiah } from '$lib/utils';
 	import type { OptionItem } from '$lib/types';
 
 	interface CsvRow {
@@ -127,19 +127,19 @@
 		<Card>
 			<CardHeader>
 				<CardDescription>{m['transactions.summary_omzet']()}</CardDescription>
-				<CardTitle class="text-xl tabular-nums">Rp {formatNumber(data.summary.omzet)}</CardTitle>
+				<CardTitle class="text-xl tabular-nums">{formatRupiah(data.summary.omzet)}</CardTitle>
 			</CardHeader>
 		</Card>
 		<Card>
 			<CardHeader>
 				<CardDescription>{m['transactions.summary_modal']()}</CardDescription>
-				<CardTitle class="text-xl tabular-nums">Rp {formatNumber(data.summary.modal)}</CardTitle>
+				<CardTitle class="text-xl tabular-nums">{formatRupiah(data.summary.modal)}</CardTitle>
 			</CardHeader>
 		</Card>
 		<Card>
 			<CardHeader>
 				<CardDescription>{m['transactions.summary_laba']()}</CardDescription>
-				<CardTitle class="text-xl tabular-nums text-emerald-600 dark:text-emerald-400">Rp {formatNumber(data.summary.laba)}</CardTitle>
+				<CardTitle class="text-xl tabular-nums text-emerald-600 dark:text-emerald-400">{formatRupiah(data.summary.laba)}</CardTitle>
 			</CardHeader>
 		</Card>
 		<Card>
