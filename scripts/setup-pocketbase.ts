@@ -140,7 +140,12 @@ const defs: ColDef[] = [
 			{ name: 'status', type: 'select', values: ['completed', 'voided', 'pending'], required: true, maxSelect: 1 },
 			{ name: 'note', type: 'text' }
 		],
-		indexes: ['CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_code ON transactions (code)'],
+		indexes: [
+			'CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_code ON transactions (code)',
+			'CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions (transaction_date)',
+			'CREATE INDEX IF NOT EXISTS idx_transactions_user_date ON transactions (user, transaction_date)',
+			'CREATE INDEX IF NOT EXISTS idx_transactions_customer_date ON transactions (customer, transaction_date)'
+		],
 		...serverOnly()
 	},
 	{
@@ -155,6 +160,7 @@ const defs: ColDef[] = [
 			{ name: 'discount', type: 'number' },
 			{ name: 'final_price', type: 'number' }
 		],
+		indexes: ['CREATE INDEX IF NOT EXISTS idx_transaction_items_transaction ON transaction_items (transaction)'],
 		...serverOnly()
 	},
 	{
@@ -176,6 +182,7 @@ const defs: ColDef[] = [
 			{ name: 'qty', type: 'number' },
 			{ name: 'note', type: 'text' }
 		],
+		indexes: ['CREATE INDEX IF NOT EXISTS idx_stock_movements_transaction ON stock_movements (transaction)'],
 		...serverOnly()
 	},
 	{
@@ -210,6 +217,7 @@ const defs: ColDef[] = [
 			{ name: 'status', type: 'select', values: ['unpaid', 'partial', 'paid'], required: true, maxSelect: 1 },
 			{ name: 'note', type: 'text' }
 		],
+		indexes: ['CREATE INDEX IF NOT EXISTS idx_debts_transaction ON debts (transaction)'],
 		...serverOnly()
 	},
 	{
@@ -355,6 +363,20 @@ function inferRelationTarget(collection: string, field: string): string {
 		audit_logs: { user: 'users' }
 	};
 	return map[collection]?.[field] ?? field;
+}
+
+// ---- Bersihkan view agregasi lama ----
+// Diganti endpoint hook `pb_hooks/tx-stats.pb.js`: list API PB menghitung ulang
+// seluruh agregasi view per permintaan halaman, sehingga rentang besar tetap
+// lambat. Endpoint hook push-down filter langsung ke SQL (1 request murah).
+for (const name of ['tx_daily_stats', 'tx_item_daily_stats']) {
+	try {
+		const existing = await pb.collections.getOne(name);
+		await pb.collections.delete(existing.id);
+		console.log(`- Dihapus view lama: ${name}`);
+	} catch {
+		/* memang tidak ada */
+	}
 }
 
 // ---- Collection users: tambah role + is_active, kunci rule update ----

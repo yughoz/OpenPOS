@@ -104,26 +104,6 @@ export function summarize(
 	return { omzet, modal, laba: omzet - modal, jumlahTransaksi };
 }
 
-/** Ambil semua items untuk sekumpulan transaction id, dikelompokkan per tx. */
-export async function fetchItemsByTx(
-	token: string | null,
-	txIds: string[]
-): Promise<Map<string, Array<{ qty: number; cost_price: number }>>> {
-	const map = new Map<string, Array<{ qty: number; cost_price: number }>>();
-	if (txIds.length === 0) return map;
-	const pb = pbForUser(token);
-	for (const txId of txIds) {
-		const items = await pb.collection('transaction_items').getFullList({
-			filter: `transaction = "${pbEscape(txId)}"`
-		});
-		map.set(
-			txId,
-			(items as any[]).map((i) => ({ qty: i.qty ?? 0, cost_price: i.cost_price ?? 0 }))
-		);
-	}
-	return map;
-}
-
 export interface ItemRow {
 	id: string;
 	product_name: string;
@@ -159,4 +139,71 @@ export async function fetchItemsGrouped(token: string | null, txIds: string[]): 
 		}
 	}
 	return map;
+}
+
+// ---- Agregasi via endpoint hook /api/pos/tx-stats (pb_hooks/tx-stats.pb.js) ----
+// Endpoint hook menjalankan satu SQL dengan filter push-down (hanya transaksi
+// completed), jadi ringkasan periode selalu 1 request kecil — berbeda dengan
+// list API PB yang menghitung ulang seluruh agregasi per halaman request.
+
+export interface TxStatsQuery {
+	from?: string; // YYYY-MM-DD
+	to?: string; // YYYY-MM-DD
+	customer?: string;
+	kasir?: string; // user id
+}
+
+async function txStats<T>(token: string | null, mode: string, q: TxStatsQuery, extra: Record<string, string> = {}): Promise<T> {
+	const pb = pbForUser(token);
+	const query: Record<string, string> = { mode, ...extra };
+	if (/^\d{4}-\d{2}-\d{2}$/.test(q.from ?? '')) query.from = q.from!;
+	if (/^\d{4}-\d{2}-\d{2}$/.test(q.to ?? '')) query.to = q.to!;
+	if (q.customer) query.customer = q.customer;
+	if (q.kasir) query.kasir = q.kasir;
+	// requestKey: null — request paralel lewat client yang sama akan saling
+	// membatalkan (auto-cancellation SDK) kalau memakai key default.
+	return await pb.send('/api/pos/tx-stats', { method: 'GET', query, requestKey: null });
+}
+
+/** Ringkasan periode (hanya transaksi completed) dari endpoint hook. */
+export async function fetchTxSummary(token: string | null, q: TxStatsQuery): Promise<PeriodSummary> {
+	const r = await txStats<{ tx_count: number; omzet: number; modal: number }>(token, 'summary', q);
+	const omzet = r.omzet ?? 0;
+	const modal = r.modal ?? 0;
+	return { omzet, modal, laba: omzet - modal, jumlahTransaksi: r.tx_count ?? 0 };
+}
+
+export interface DailySeriesRow {
+	day: string; // YYYY-MM-DD
+	tx_count: number;
+	omzet: number;
+	modal: number;
+}
+
+/** Deret harian (hanya completed), terurut per hari. */
+export async function fetchDailySeries(token: string | null, q: TxStatsQuery): Promise<DailySeriesRow[]> {
+	return await txStats<DailySeriesRow[]>(token, 'daily', q);
+}
+
+export interface MethodTotalRow {
+	payment_method: string;
+	tx_count: number;
+	omzet: number;
+}
+
+/** Total per metode pembayaran (hanya completed), terurut omzet desc. */
+export async function fetchMethodTotals(token: string | null, q: TxStatsQuery): Promise<MethodTotalRow[]> {
+	return await txStats<MethodTotalRow[]>(token, 'methods', q);
+}
+
+export interface TopProductRow {
+	product_name: string;
+	qty: number;
+	omzet: number;
+	modal: number;
+}
+
+/** Produk terlaris (hanya completed), terurut qty desc. */
+export async function fetchTopProducts(token: string | null, q: TxStatsQuery, limit = 10): Promise<TopProductRow[]> {
+	return await txStats<TopProductRow[]>(token, 'top-products', q, { limit: String(limit) });
 }

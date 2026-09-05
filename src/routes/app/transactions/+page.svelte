@@ -17,40 +17,6 @@
 	import { formatDateTime, formatNumber, formatRupiah } from '$lib/utils';
 	import type { OptionItem } from '$lib/types';
 
-	interface CsvRow {
-		tanggal: string;
-		nota: string;
-		customer: string;
-		kasir: string;
-		total: number;
-		status: string;
-	}
-
-	function exportCsv() {
-		const head = ['Tanggal', 'Nota', 'Customer', 'Kasir', 'Total', 'Status'];
-		const lines = [head.join(';')];
-		for (const t of data.all as CsvRow[]) {
-			lines.push(
-				[
-					t.tanggal,
-					t.nota,
-					t.customer,
-					t.kasir,
-					String(t.total),
-					t.status === 'completed' ? 'Selesai' : 'Dibatalkan'
-				]
-					.map((v) => `"${String(v).replace(/"/g, '""')}"`)
-					.join(';')
-			);
-		}
-		const blob = new Blob(['\ufeff' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-		const a = document.createElement('a');
-		a.href = URL.createObjectURL(blob);
-		a.download = `laporan-transaksi-${new Date().toISOString().slice(0, 10)}.csv`;
-		a.click();
-		URL.revokeObjectURL(a.href);
-	}
-
 	interface TxRow {
 		id: string;
 		code: string;
@@ -95,6 +61,17 @@
 		goto(`?${params.toString()}`);
 	}
 
+	// export CSV di server memakai filter yang sedang aktif
+	const exportHref = $derived.by(() => {
+		const params = new URLSearchParams();
+		if (data.filters.from) params.set('from', data.filters.from);
+		if (data.filters.to) params.set('to', data.filters.to);
+		if (data.filters.customer) params.set('customer', data.filters.customer);
+		if (data.filters.kasir) params.set('kasir', data.filters.kasir);
+		const qs = params.toString();
+		return '/app/transactions/export.csv' + (qs ? `?${qs}` : '');
+	});
+
 	const voidEnhance = () =>
 		() =>
 		async ({ update, result }: { update: () => Promise<void>; result: { type: string; data?: unknown } }) => {
@@ -116,7 +93,9 @@
 		<div class="space-y-1">
 			<h1 class="text-2xl font-semibold tracking-tight md:text-3xl">{m['nav.transaction_list']()}</h1>
 		</div>
-		<Button variant="outline" onclick={exportCsv}>{m['transactions.export_csv']()}</Button>
+		<a href={exportHref}>
+			<Button variant="outline" type="button">{m['transactions.export_csv']()}</Button>
+		</a>
 	</div>
 
 	<p class="max-w-2xl text-sm text-muted-foreground">

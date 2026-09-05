@@ -1,6 +1,6 @@
 import { requireAdmin } from '$lib/server/guard';
-import { pbAdmin, pbForUser } from '$lib/server/pb';
-import { buildTxFilter, summarize, fetchItemsGrouped } from '$lib/server/transaction';
+import { pbAdmin } from '$lib/server/pb';
+import { fetchDailySeries, fetchMethodTotals, fetchTopProducts, fetchTxSummary } from '$lib/server/transaction';
 
 const PATH = '/app/reports/sales';
 
@@ -22,27 +22,15 @@ export const load = async ({ locals, url }) => {
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(to)) to = dayKey(now);
 	const kasir = url.searchParams.get('kasir')?.toString() ?? '';
 
-	const pb = pbForUser(locals.token);
-	const all = (await pb.collection('transactions').getFullList({
-		filter: buildTxFilter({ from, to, kasir }),
-		sort: 'transaction_date'
-	})) as any[];
-
-	const txs = all.map((t) => ({
-		id: t.id as string,
-		total_final: t.total_final ?? 0,
-		status: t.status ?? '',
-		payment_method: t.payment_method ?? '',
-		date: String(t.transaction_date ?? '').slice(0, 10)
-	}));
-	const itemsByTx = await fetchItemsGrouped(locals.token, txs.map((t) => t.id));
-	const summary = summarize(txs, itemsByTx);
-
-	// modal per transaksi dari snapshot cost_price (PRD F5.8)
-	const modalByTx = new Map<string, number>();
-	for (const [txId, items] of itemsByTx) {
-		modalByTx.set(txId, items.reduce((sum, it) => sum + (it.cost_price ?? 0) * (it.qty ?? 0), 0));
-	}
+	// agregasi via endpoint hook /api/pos/tx-stats — satu SQL push-down per
+	// mode, bukan getFullList seluruh transaksi + item satu periode
+	const statsQuery = { from, to, kasir };
+	const [summary, dailyRows, methodRows, topRows] = await Promise.all([
+		fetchTxSummary(locals.token, statsQuery),
+		fetchDailySeries(locals.token, statsQuery),
+		fetchMethodTotals(locals.token, statsQuery),
+		fetchTopProducts(locals.token, statsQuery, 10)
+	]);
 
 	// deret harian: hari kosong diisi nol supaya bentuk grafik terbaca;
 	// rentang > 366 hari tidak diisi nol (cukup hari yang ada transaksinya)
@@ -55,13 +43,12 @@ export const load = async ({ locals, url }) => {
 			perDay.set(dayKey(d), { omzet: 0, modal: 0, count: 0 });
 		}
 	}
-	for (const tx of txs) {
-		if (tx.status !== 'completed') continue; // voided tidak dihitung
-		const bucket = perDay.get(tx.date) ?? { omzet: 0, modal: 0, count: 0 };
-		bucket.omzet += tx.total_final;
-		bucket.modal += modalByTx.get(tx.id) ?? 0;
-		bucket.count += 1;
-		perDay.set(tx.date, bucket);
+	for (const r of dailyRows) {
+		const bucket = perDay.get(r.day) ?? { omzet: 0, modal: 0, count: 0 };
+		bucket.omzet += r.omzet;
+		bucket.modal += r.modal;
+		bucket.count += r.tx_count;
+		perDay.set(r.day, bucket);
 	}
 	const daily = Array.from(perDay.entries())
 		.sort(([a], [b]) => (a < b ? -1 : 1))
@@ -75,38 +62,17 @@ export const load = async ({ locals, url }) => {
 			laba: v.omzet - v.modal
 		}));
 
-	// produk terlaris dari item transaksi selesai; nama = snapshot di transaction_items
-	// sehingga produk yang sudah terhapus tetap tampil
-	const byProduct = new Map<string, { name: string; qty: number; omzet: number; modal: number }>();
-	for (const tx of txs) {
-		if (tx.status !== 'completed') continue;
-		for (const it of itemsByTx.get(tx.id) ?? []) {
-			const key = it.product_name || '(tanpa nama)';
-			const agg = byProduct.get(key) ?? { name: key, qty: 0, omzet: 0, modal: 0 };
-			agg.qty += it.qty ?? 0;
-			agg.omzet += it.final_price ?? 0;
-			agg.modal += (it.cost_price ?? 0) * (it.qty ?? 0);
-			byProduct.set(key, agg);
-		}
-	}
-	const topProducts = Array.from(byProduct.values())
-		.map((p) => ({ name: p.name, qty: p.qty, omzet: p.omzet, laba: p.omzet - p.modal }))
-		.sort((a, b) => b.qty - a.qty)
+	// produk terlaris dari endpoint agregat; nama = snapshot product_name di
+	// transaction_items sehingga produk yang sudah terhapus tetap tampil
+	const topProducts = topRows
+		.map((r) => ({ name: r.product_name || '(tanpa nama)', qty: r.qty, omzet: r.omzet, laba: r.omzet - r.modal }))
 		.slice(0, 10);
 
-	// rincian per metode pembayaran
-	const byMethod = new Map<string, { count: number; omzet: number }>();
-	for (const tx of txs) {
-		if (tx.status !== 'completed') continue;
-		const key = tx.payment_method || 'lainnya';
-		const agg = byMethod.get(key) ?? { count: 0, omzet: 0 };
-		agg.count += 1;
-		agg.omzet += tx.total_final;
-		byMethod.set(key, agg);
-	}
-	const methods = Array.from(byMethod.entries())
-		.map(([method, v]) => ({ method, label: METHOD_LABEL[method] ?? method, count: v.count, omzet: v.omzet }))
-		.sort((a, b) => b.omzet - a.omzet);
+	// rincian per metode pembayaran (sudah terurut omzet desc dari endpoint)
+	const methods = methodRows.map((r) => {
+		const method = r.payment_method || 'lainnya';
+		return { method, label: METHOD_LABEL[method] ?? method, count: r.tx_count, omzet: r.omzet };
+	});
 
 	// opsi filter kasir (halaman ini khusus admin — butuh superuser untuk baca users)
 	let kasirs: Array<{ id: string; name: string }> = [];

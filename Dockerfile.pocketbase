@@ -12,4 +12,6 @@ RUN unzip /tmp/pb.zip pocketbase -d /usr/local/bin && chmod +x /usr/local/bin/po
 EXPOSE 8094
 COPY docker-entrypoint-pb.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+# Hook endpoint agregat (pb_hooks/tx-stats.pb.js) — dimuat via --hooksDir di entrypoint
+COPY pb_hooks /pb_hooks
 ENTRYPOINT ["/entrypoint.sh"]

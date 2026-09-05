@@ -4,4 +4,4 @@
 if [ -n "$PB_SUPERUSER_EMAIL" ] && [ -n "$PB_SUPERUSER_PASSWORD" ]; then
 	/usr/local/bin/pocketbase superuser upsert "$PB_SUPERUSER_EMAIL" "$PB_SUPERUSER_PASSWORD" --dir=/pb_data || true
 fi
-exec /usr/local/bin/pocketbase serve --http=0.0.0.0:8094 --dir=/pb_data --automigrate=false
+exec /usr/local/bin/pocketbase serve --http=0.0.0.0:8094 --dir=/pb_data --hooksDir=/pb_hooks --automigrate=false

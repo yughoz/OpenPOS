@@ -71,12 +71,13 @@ A free & open-source, web-based Point of Sale (POS) application for small-to-med
 ### 2. Run PocketBase
 
 ```bash
-./pocketbase serve --http=127.0.0.1:8094 --dir=pb_data --automigrate=false
+./pocketbase serve --http=127.0.0.1:8094 --dir=pb_data --hooksDir=pb_hooks --automigrate=false
 # in another terminal, create a superuser:
 ./pocketbase superuser upsert admin@example.com yourpassword
 ```
 
 > `--automigrate=false` is required: the schema is managed by the idempotent `bun run setup:db` script, not by migration files.
+> `--hooksDir=pb_hooks` is required: the transaction/sales summary pages call the aggregate endpoint defined in `pb_hooks/tx-stats.pb.js` (a few ms per query instead of fetching every transaction of the period).
 
 ### 3. Configure & seed
 

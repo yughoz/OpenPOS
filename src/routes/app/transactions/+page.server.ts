@@ -2,9 +2,17 @@ import { fail } from '@sveltejs/kit';
 import { requireUser } from '$lib/server/guard';
 import { pbErrorMessage, listRecords } from '$lib/server/crud';
 import { pbAdmin, pbForUser } from '$lib/server/pb';
-import { buildTxFilter, summarize, fetchItemsGrouped, voidTransaction, TransactionError, type ItemRow } from '$lib/server/transaction';
+import {
+	buildTxFilter,
+	fetchTxSummary,
+	fetchItemsGrouped,
+	voidTransaction,
+	TransactionError,
+	type ItemRow
+} from '$lib/server/transaction';
 
 const PATH = '/app/transactions';
+const PER_PAGE = 20;
 
 export const load = async ({ locals, url }) => {
 	const user = requireUser(locals.user, PATH);
@@ -24,11 +32,20 @@ export const load = async ({ locals, url }) => {
 	}
 
 	const filter = buildTxFilter({ from, to, customer, kasir }, isAdmin ? undefined : user.id);
+	// scoping kasir untuk ringkasan: non-admin dipaksa ke transaksinya sendiri
+	const statsQuery = { from, to, customer, kasir: isAdmin ? kasir : user.id };
 
-	// satu fetch untuk semuanya: ringkasan + daftar halaman + detail item
 	const pb = pbForUser(locals.token);
-	const all = await pb.collection('transactions').getFullList({ filter, sort: '-transaction_date', expand: 'customer,user' });
-	const allTx = (all as any[]).map((t) => ({
+
+	// tabel: hanya 1 halaman (20 baris, 1 request) — pagination ditangani PocketBase
+	const query = { filter, sort: '-transaction_date', expand: 'customer,user' };
+	let result = await pb.collection('transactions').getList(page, PER_PAGE, query);
+	const totalPages = Math.max(1, Math.ceil(result.totalItems / PER_PAGE));
+	const safePage = Math.min(page, totalPages);
+	if (safePage !== page) {
+		result = await pb.collection('transactions').getList(safePage, PER_PAGE, query);
+	}
+	const pageRows = (result.items as any[]).map((t) => ({
 		id: t.id,
 		code: t.code ?? '',
 		transaction_date: t.transaction_date ?? '',
@@ -38,30 +55,20 @@ export const load = async ({ locals, url }) => {
 		user: t.user ?? '',
 		expand: t.expand
 	}));
-	// data lengkap utk export CSV (tanpa expand — string polos)
-	const csvRows = (all as any[]).map((t) => ({
-		tanggal: String(t.transaction_date ?? '').slice(0, 19),
-		nota: t.code ?? '',
-		customer: t.expand?.customer?.name ?? '',
-		kasir: t.expand?.user?.name ?? '',
-		total: t.total_final ?? 0,
-		status: t.status ?? ''
-	}));
-	const itemsByTx = await fetchItemsGrouped(locals.token, allTx.map((t) => t.id));
-	const summary = summarize(allTx, itemsByTx);
 
-	const PER_PAGE = 20;
-	const totalPages = Math.max(1, Math.ceil(allTx.length / PER_PAGE));
-	const safePage = Math.min(page, totalPages);
-	const pageRows = allTx.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+	// detail item hanya untuk baris yang tampil (1 request @100 id)
+	const itemsByTx = await fetchItemsGrouped(locals.token, pageRows.map((t) => t.id));
 	const itemsMapPlain: Record<string, ItemRow[]> = {};
 	for (const [k, v] of itemsByTx) itemsMapPlain[k] = v;
+
+	// ringkasan periode dari endpoint agregat (1 request kecil)
+	const summary = await fetchTxSummary(locals.token, statsQuery);
 
 	const list = {
 		items: pageRows,
 		page: safePage,
 		totalPages,
-		totalItems: allTx.length
+		totalItems: result.totalItems
 	};
 
 	// opsi filter: customer & daftar kasir (admin)
@@ -79,7 +86,6 @@ export const load = async ({ locals, url }) => {
 
 	return {
 		list,
-		all: csvRows,
 		itemsMap: itemsMapPlain,
 		summary,
 		filters: { from, to, customer, kasir },
