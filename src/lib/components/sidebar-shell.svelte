@@ -41,7 +41,10 @@
 
 <Sidebar.Provider>
 	<AppSidebar {data} />
-	<Sidebar.Inset>
+	<!-- h-svh + overflow-hidden: tinggi rantai jadi definitif sehingga halaman
+		app-like (mis. ai-chat) bisa pin input-nya di bawah; halaman biasa
+		scroll di dalam area konten. md: kurangi tinggi margin inset (m-2). -->
+	<Sidebar.Inset class="h-svh overflow-hidden md:h-[calc(100svh-1rem)]">
 		<header
 			class="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
 		>
@@ -61,7 +64,7 @@
 				</Breadcrumb.Root>
 			</div>
 		</header>
-		<div class="flex flex-1 flex-col gap-4 p-4 pt-4 md:p-6">
+		<div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 pt-4 md:p-6">
 			{@render children()}
 		</div>
 	</Sidebar.Inset>
