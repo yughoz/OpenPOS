@@ -255,10 +255,11 @@ const ORDER = [
 	'customers',
 	'suppliers',
 	'outlets',
+	// transactions duluan — debts & transaction_items punya relation ke sini
+	'transactions',
 	'debts',
 	'debt_payments',
 	'customer_prices',
-	'transactions',
 	'transaction_items',
 	'stock_movements',
 	'settings',
@@ -272,6 +273,28 @@ async function getCollectionId(name: string): Promise<string> {
 	const existing = await pb.collections.getOne(name);
 	collectionIds.set(name, existing.id);
 	return existing.id;
+}
+
+// ---- Pastikan collection auth `users` ada (PocketBase fresh belum punya) ----
+try {
+	await pb.collections.getOne('users');
+	console.log('= Sudah ada: users');
+} catch {
+	await pb.collections.create({
+		name: 'users',
+		type: 'auth',
+		fields: [
+			{ name: 'name', type: 'text' },
+			{ name: 'email', type: 'email', required: true },
+			{ name: 'password', type: 'password', required: true }
+		],
+		listRule: null,
+		viewRule: null,
+		createRule: null,
+		updateRule: null,
+		deleteRule: null
+	});
+	console.log('+ Dibuat: users (auth)');
 }
 
 for (const name of ORDER) {

@@ -48,7 +48,7 @@ export const actions = {
 		const finalPassword = newPassword ?? currentPassword;
 		if (finalPassword) {
 			const fresh = await authenticate(finalEmail, finalPassword);
-			if (fresh) setSessionCookie(cookies, fresh.token);
+			if (fresh) setSessionCookie(cookies, fresh.token, request.url);
 		}
 
 		return { success: true };

@@ -10,4 +10,6 @@ ADD https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/po
 RUN unzip /tmp/pb.zip pocketbase -d /usr/local/bin && chmod +x /usr/local/bin/pocketbase
 
 EXPOSE 8094
-CMD ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:8094", "--dir=/pb_data", "--automigrate=false"]
+COPY docker-entrypoint-pb.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

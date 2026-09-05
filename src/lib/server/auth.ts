@@ -71,12 +71,15 @@ export async function getUser(token: string): Promise<AuthUser | null> {
 	}
 }
 
-export function setSessionCookie(cookies: Cookies, token: string) {
+export function setSessionCookie(cookies: Cookies, token: string, requestUrl?: string) {
+	// Cookie Secure ditolak browser saat diakses via http:// — ikuti protokol
+	// request supaya tetap jalan lokal (deploy NekoApps tanpa TLS).
+	const isHttps = requestUrl ? requestUrl.startsWith('https') : !dev;
 	cookies.set(SESSION_COOKIE, token, {
 		path: '/',
 		httpOnly: true,
 		sameSite: 'strict',
-		secure: !dev,
+		secure: isHttps,
 		maxAge: 60 * 60 * 24 * 7 // 7 days
 	});
 }
