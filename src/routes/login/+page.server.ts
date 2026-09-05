@@ -16,7 +16,7 @@ export const actions: Actions = {
 			return fail(401, { error: 'Email atau password salah' });
 		}
 
-		setSessionCookie(cookies, result.token);
+		setSessionCookie(cookies, result.token, request.url);
 
 		const redirectTo = url.searchParams.get('redirect') ?? '/';
 		redirect(302, redirectTo);
