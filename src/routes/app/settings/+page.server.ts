@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { requireAdmin } from '$lib/server/guard';
 import { getSetting, setSetting } from '$lib/server/settings';
+import { createBackup, deleteBackup, listBackups, restoreBackup, isValidBackupName } from '$lib/server/backup';
 import * as m from '$lib/paraglide/messages.js';
 
 const PATH = '/app/settings';
@@ -21,7 +22,13 @@ export const load = async ({ locals, url }) => {
 	requireAdmin(locals.user, url.pathname || PATH);
 	const values: Record<string, string> = {};
 	for (const f of _FIELDS) values[f.key] = await getSetting(locals.token, f.key, '');
-	return { fields: _FIELDS, values };
+	let backups: Awaited<ReturnType<typeof listBackups>> = [];
+	try {
+		backups = await listBackups();
+	} catch {
+		// fitur backup tidak kritikal — jangan gagalkan seluruh halaman settings
+	}
+	return { fields: _FIELDS, values, backups };
 };
 
 export const actions = {
@@ -42,5 +49,51 @@ export const actions = {
 			return fail(400, { error: m['settings.save_error']() });
 		}
 		return { success: true };
+	},
+
+	create_backup: async ({ request, locals }) => {
+		requireAdmin(locals.user, PATH);
+		const form = await request.formData();
+		const raw = form.get('name')?.toString().trim() ?? '';
+		let name: string | undefined;
+		if (raw) {
+			if (!isValidBackupName(raw)) return fail(400, { backup_error: 'Nama backup hanya boleh huruf, angka, titik, garis.' });
+			name = raw;
+		}
+		try {
+			await createBackup(name);
+		} catch (err) {
+			return fail(400, { backup_error: (err as { response?: { message?: string } })?.response?.message ?? 'Gagal membuat backup.' });
+		}
+		return { backup_created: true };
+	},
+
+	delete_backup: async ({ request, locals }) => {
+		requireAdmin(locals.user, PATH);
+		const form = await request.formData();
+		const name = form.get('name')?.toString() ?? '';
+		if (!isValidBackupName(name)) return fail(400, { backup_error: 'Nama backup tidak valid.' });
+		try {
+			await deleteBackup(name);
+		} catch (err) {
+			return fail(400, { backup_error: (err as { response?: { message?: string } })?.response?.message ?? 'Gagal menghapus backup.' });
+		}
+		return { backup_deleted: true };
+	},
+
+	// full replace: seluruh data saat ini diganti isi backup (users ikut ter-roll-back)
+	restore_backup: async ({ request, locals }) => {
+		requireAdmin(locals.user, PATH);
+		const form = await request.formData();
+		const name = form.get('name')?.toString() ?? '';
+		const confirm = form.get('confirm')?.toString().trim() ?? '';
+		if (!isValidBackupName(name)) return fail(400, { backup_error: 'Nama backup tidak valid.' });
+		if (confirm !== 'RESTORE') return fail(400, { backup_error: 'Konfirmasi salah — ketik RESTORE untuk memulihkan.' });
+		try {
+			await restoreBackup(name);
+		} catch (err) {
+			return fail(400, { backup_error: (err as { response?: { message?: string } })?.response?.message ?? 'Gagal memulihkan backup.' });
+		}
+		return { backup_restored: true };
 	}
 };

@@ -421,5 +421,20 @@
  "chat.s4": "Customer siapa saja yang masih punya hutang?",
  "settings.currency_symbol": "Simbol Mata Uang",
  "settings.ph_currency_symbol": "Contoh: Rp",
- "stockReport.count": "{n} pergerakan"
+ "stockReport.count": "{n} pergerakan",
+ "settings.backup_title": "Backup & Pulihkan",
+ "settings.backup_desc": "Backup berisi seluruh data, schema, dan file (ZIP dari PocketBase). Simpan hasil download di tempat aman.",
+ "settings.backup_create": "Buat Backup",
+ "settings.backup_name_ph": "Nama opsional, mis. sebelum-stok-opname",
+ "settings.backup_empty": "Belum ada backup.",
+ "settings.backup_file": "File",
+ "settings.backup_modified": "Tanggal",
+ "settings.backup_download": "Download",
+ "settings.backup_restore_desc": "Pulihkan MENGGANTI seluruh data saat ini dengan isi backup — termasuk akun & password (semua pengguna diminta login ulang). Tidak bisa dibatalkan.",
+ "settings.backup_restore_confirm_ph": "Ketik RESTORE untuk konfirmasi",
+ "settings.backup_restore": "Pulihkan",
+ "settings.backup_created_toast": "Backup berhasil dibuat",
+ "settings.backup_deleted_toast": "Backup dihapus",
+ "settings.backup_restored_toast": "Data berhasil dipulihkan, silakan login ulang",
+ "settings.backup_delete_confirm": "Hapus backup {name}?"
 }

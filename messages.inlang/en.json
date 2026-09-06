@@ -421,5 +421,20 @@
  "chat.s4": "Which customers still have debts?",
  "settings.currency_symbol": "Currency Symbol",
  "settings.ph_currency_symbol": "e.g. Rp",
- "stockReport.count": "{n} movements"
+ "stockReport.count": "{n} movements",
+ "settings.backup_title": "Backup & Restore",
+ "settings.backup_desc": "A backup ZIP contains all records, schema, and files (PocketBase). Keep downloads somewhere safe.",
+ "settings.backup_create": "Create backup",
+ "settings.backup_name_ph": "Optional name, e.g. before-stock-count",
+ "settings.backup_empty": "No backups yet.",
+ "settings.backup_file": "File",
+ "settings.backup_modified": "Date",
+ "settings.backup_download": "Download",
+ "settings.backup_restore_desc": "Restoring REPLACES all current data with the backup — including accounts & passwords (everyone must log in again). This cannot be undone.",
+ "settings.backup_restore_confirm_ph": "Type RESTORE to confirm",
+ "settings.backup_restore": "Restore",
+ "settings.backup_created_toast": "Backup created",
+ "settings.backup_deleted_toast": "Backup deleted",
+ "settings.backup_restored_toast": "Data restored, please log in again",
+ "settings.backup_delete_confirm": "Delete backup {name}?"
 }
