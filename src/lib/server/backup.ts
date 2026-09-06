@@ -45,6 +45,14 @@ export async function restoreBackup(name: string): Promise<void> {
 	await admin.backups.restore(name, { requestKey: null, timeout: 120_000 });
 }
 
+/** Restore dari file ZIP yang diunggah user (diteruskan ke /api/backups/upload). */
+export async function restoreBackupUpload(file: File): Promise<void> {
+	const admin = await pbAdmin();
+	const form = new FormData();
+	form.append('file', file, file.name || 'backup.zip');
+	await admin.backups.upload(form, { requestKey: null, timeout: 180_000 });
+}
+
 /** Ambil isi ZIP backup untuk di-proxy-kan ke browser admin.
  * Download memakai file token superuser berumur pendek via query param —
  * endpoint ini tidak menerima Authorization header (403 kalau dipaksa). */

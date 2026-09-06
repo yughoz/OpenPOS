@@ -436,5 +436,6 @@
  "settings.backup_created_toast": "Backup created",
  "settings.backup_deleted_toast": "Backup deleted",
  "settings.backup_restored_toast": "Data restored, please log in again",
- "settings.backup_delete_confirm": "Delete backup {name}?"
+ "settings.backup_delete_confirm": "Delete backup {name}?",
+ "settings.backup_upload_desc": "Restore from a previously downloaded backup ZIP file:"
 }

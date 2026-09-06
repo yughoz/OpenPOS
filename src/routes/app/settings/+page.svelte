@@ -52,6 +52,31 @@
 	// backup
 	let restoreName = $state('');
 	let restoreConfirm = $state('');
+	let uploadConfirm = $state('');
+	let uploading = $state(false);
+
+	// restore dari file upload: dikirim via fetch langsung ke endpoint khusus
+	// (bebas body size limit form action), lalu dipaksa login ulang
+	async function restoreUploadSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		if (uploading) return;
+		const fd = new FormData(e.currentTarget as HTMLFormElement);
+		uploading = true;
+		try {
+			const res = await fetch('/app/settings/restore-upload', { method: 'POST', body: fd });
+			const data = (await res.json().catch(() => ({}))) as { error?: string };
+			if (!res.ok) {
+				toast.error(String(data.error ?? 'Gagal memulihkan backup.'));
+			} else {
+				toast.success(m['settings.backup_restored_toast']());
+				await goto('/login');
+			}
+		} catch {
+			toast.error('Gagal mengunggah backup.');
+		} finally {
+			uploading = false;
+		}
+	}
 
 	const saveEnhance = (): SubmitFunction => () => async ({ update, result }) => {
 		await update();
@@ -218,12 +243,34 @@
 							<Label for="restore_confirm">{m['settings.backup_restore_confirm_ph']()}</Label>
 							<Input id="restore_confirm" name="confirm" bind:value={restoreConfirm} autocomplete="off" />
 						</div>
+					<div>
+						<Button type="submit" variant="destructive" disabled={!restoreName || restoreConfirm.trim() !== 'RESTORE'}>
+							{m['settings.backup_restore']()}
+						</Button>
+					</div>
+				</form>
+
+				<!-- restore dari file upload -->
+				<div class="grid gap-2 border-t border-destructive/20 pt-3">
+					<Label for="restore_file">{m['settings.backup_upload_desc']()}</Label>
+					<form
+						class="grid gap-3"
+						onsubmit={restoreUploadSubmit}
+					>
+						<Input id="restore_file" name="file" type="file" accept=".zip,application/zip" required />
+						<Input
+							name="confirm"
+							bind:value={uploadConfirm}
+							placeholder={m['settings.backup_restore_confirm_ph']()}
+							autocomplete="off"
+						/>
 						<div>
-							<Button type="submit" variant="destructive" disabled={!restoreName || restoreConfirm.trim() !== 'RESTORE'}>
+							<Button type="submit" variant="destructive" disabled={uploading || uploadConfirm.trim() !== 'RESTORE'}>
 								{m['settings.backup_restore']()}
 							</Button>
 						</div>
 					</form>
+				</div>
 				</div>
 			{/if}
 		</CardContent>

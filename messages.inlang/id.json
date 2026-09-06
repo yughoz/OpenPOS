@@ -436,5 +436,6 @@
  "settings.backup_created_toast": "Backup berhasil dibuat",
  "settings.backup_deleted_toast": "Backup dihapus",
  "settings.backup_restored_toast": "Data berhasil dipulihkan, silakan login ulang",
- "settings.backup_delete_confirm": "Hapus backup {name}?"
+ "settings.backup_delete_confirm": "Hapus backup {name}?",
+ "settings.backup_upload_desc": "Pulihkan dari file ZIP backup yang pernah di-download:"
 }
