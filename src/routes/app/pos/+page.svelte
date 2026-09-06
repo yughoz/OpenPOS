@@ -306,6 +306,7 @@
 	}
 
 	function handleKey(e: KeyboardEvent) {
+		handleGlobalScan(e);
 		if (e.key === 'F2') {
 			e.preventDefault();
 			scanEl?.focus();
@@ -313,6 +314,50 @@
 			e.preventDefault();
 			paidEl?.focus();
 		}
+	}
+
+	// ---- tangkap scan barcode GLOBAL ----
+	// Scanner nyata mengetik 10-50ms per karakter (manusia >150ms dan hampir
+	// selalu berjeda mikir). Kolom uang (paidEl) dikecualikan — ketikan + Enter
+	// di sana berarti pembayaran.
+	const SCAN_GAP_MS = 150;
+	const SCAN_MIN_LEN = 5;
+	let scanBuf = '';
+	let scanBufLast = 0;
+	let scanBufQty = '1';
+
+	function handleGlobalScan(e: KeyboardEvent) {
+		const t = e.target as HTMLElement | null;
+		if (t === scanEl) return; // input scan punya alur sendiri (suggest + Enter)
+		if (t === paidEl) {
+			scanBuf = '';
+			return;
+		}
+		if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta' || e.key === 'Tab') return;
+
+		const now = Date.now();
+		if (e.key === 'Enter') {
+			const code = scanBuf;
+			const isScan = code.length >= SCAN_MIN_LEN && now - scanBufLast <= SCAN_GAP_MS * 3;
+			scanBuf = '';
+			if (!isScan) return;
+			e.preventDefault();
+			qty = scanBufQty; // buang sampai karakter barcode yang nyasar di kolom qty
+			term = code;
+			suggestionIdx = -1;
+			tick().then(() => scanFormEl?.requestSubmit());
+			return;
+		}
+		if (e.key.length !== 1) {
+			scanBuf = '';
+			return;
+		}
+		if (!scanBuf || now - scanBufLast > SCAN_GAP_MS) {
+			scanBuf = '';
+			scanBufQty = qty; // simpan qty sebelum scan (mis. kasir sengaja set qty 5)
+		}
+		scanBuf += e.key;
+		scanBufLast = now;
 	}
 </script>
 
