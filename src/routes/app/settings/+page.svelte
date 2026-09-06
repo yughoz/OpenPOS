@@ -54,6 +54,8 @@
 	let restoreConfirm = $state('');
 	let uploadConfirm = $state('');
 	let uploading = $state(false);
+	// konfirmasi hapus dua-langkah tanpa dialog native (webview tak selalu tampilkan confirm())
+	let deleteName = $state('');
 
 	// restore dari file upload: dikirim via fetch langsung ke endpoint khusus
 	// (bebas body size limit form action), lalu dipaksa login ulang
@@ -89,6 +91,7 @@
 
 	const backupEnhance = (): SubmitFunction => () => async ({ update, result }) => {
 		await update();
+		deleteName = '';
 		if (result.type === 'failure') {
 			toast.error(String((result.data as { backup_error?: string } | undefined)?.backup_error ?? m['common.save_error']()));
 		} else if (result.type === 'success') {
@@ -197,21 +200,25 @@
 									<Table.Cell class="text-right tabular-nums">{formatSize(b.size)}</Table.Cell>
 									<Table.Cell class="whitespace-nowrap text-muted-foreground">{formatDateTime(b.modified)}</Table.Cell>
 									<Table.Cell>
-										<div class="flex justify-end gap-1">
+										<div class="flex items-center justify-end gap-1">
 											<a href={`/app/settings/backup/${encodeURIComponent(b.name)}`} title={m['settings.backup_download']()}>
 												<Button variant="ghost" size="sm">{m['settings.backup_download']()}</Button>
 											</a>
-											<form
-												method="POST"
-												action="?/delete_backup"
-												use:enhance={backupEnhance()}
-												onsubmit={(e) => {
-													if (!confirm(m['settings.backup_delete_confirm']({ name: b.name }))) e.preventDefault();
-												}}
-											>
-												<input type="hidden" name="name" value={b.name} />
-												<Button variant="ghost" size="sm" class="text-destructive">{m['common.delete']()}</Button>
-											</form>
+											{#if deleteName === b.name}
+												<!-- langkah 2: benar-benar hapus -->
+												<form method="POST" action="?/delete_backup" use:enhance={backupEnhance()}>
+													<input type="hidden" name="name" value={b.name} />
+													<Button type="submit" variant="ghost" size="sm" class="text-destructive">
+														{m['common.delete']()}?
+													</Button>
+												</form>
+												<Button variant="ghost" size="sm" onclick={() => (deleteName = '')}>✕</Button>
+											{:else}
+												<!-- langkah 1: arahkan dulu, tanpa dialog native -->
+												<Button variant="ghost" size="sm" class="text-destructive" onclick={() => (deleteName = b.name)}>
+													{m['common.delete']()}
+												</Button>
+											{/if}
 										</div>
 									</Table.Cell>
 								</Table.Row>
