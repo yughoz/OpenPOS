@@ -61,6 +61,8 @@ export async function restoreBackupUpload(file: File): Promise<void> {
 	const form = new FormData();
 	form.append('file', clean, finalName);
 	await admin.backups.upload(form, { requestKey: null, timeout: 180_000 });
+	// upload hanya menyimpan file — restore harus dipicu terpisah
+	await admin.backups.restore(finalName, { requestKey: null, timeout: 120_000 });
 }
 
 /** Ambil isi ZIP backup untuk di-proxy-kan ke browser admin.
