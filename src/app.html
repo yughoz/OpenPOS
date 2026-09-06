@@ -14,6 +14,20 @@
 			})();
 		</script>
 		%sveltekit.head%
+	<script>
+		window.addEventListener('error', function (e) {
+			var d = document.getElementById('err-catch');
+			if (!d) { d = document.createElement('div'); d.id = 'err-catch'; (document.body || document.documentElement).appendChild(d); }
+			d.style.cssText = 'position:fixed;bottom:0;left:0;z-index:99999;background:#fee;color:#900;font:11px monospace;padding:4px;max-width:100%;white-space:pre-wrap';
+			d.textContent += 'ERR: ' + e.message + ' @' + (e.filename || '') + ':' + e.lineno + '\n';
+		});
+		window.addEventListener('unhandledrejection', function (e) {
+			var d = document.getElementById('err-catch');
+			if (!d) { d = document.createElement('div'); d.id = 'err-catch'; (document.body || document.documentElement).appendChild(d); }
+			d.style.cssText = 'position:fixed;bottom:0;left:0;z-index:99999;background:#fee;color:#900;font:11px monospace;padding:4px;max-width:100%;white-space:pre-wrap';
+			d.textContent += 'REJ: ' + ((e.reason && e.reason.message) || String(e.reason)) + '\n';
+		});
+	</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
