@@ -38,6 +38,9 @@
 
 <svelte:head>
 	<title>Struk {data.tx.code} — OpenPOS</title>
+	<!-- paksa ukuran kertas sesuai printer thermal; tanpa ini dialog print
+		memakai kertas default (A4 + margin) sehingga struk kepotong -->
+	{@html `<style>@page { size: ${data.receiptSize}mm auto; margin: 0; }</style>`}
 </svelte:head>
 
 <div class="mx-auto w-full max-w-sm p-4 print:max-w-none print:p-0">
@@ -46,9 +49,10 @@
 		<Button size="sm" onclick={() => window.print()}>Cetak</Button>
 	</div>
 
-	<!-- struk thermal, lebar sesuai setting (58/80mm) -->
+	<!-- struk thermal, lebar sesuai setting (58/80mm);
+		lebar < kertas (border-box, termasuk padding) agar muat area cetak printer -->
 	<div
-		class="mx-auto bg-white p-2 font-mono leading-snug text-black print:p-0 {data.receiptSize === 58 ? 'w-[58mm] text-[10px] print:text-[9px]' : 'w-[72mm] text-[11px] print:text-[10px]'}"
+		class="mx-auto bg-white p-2 font-mono leading-snug text-black print:p-0 {data.receiptSize === 58 ? 'w-[54mm] text-[10px] print:text-[9px]' : 'w-[74mm] text-[11px] print:text-[10px]'}"
 	>
 		<div class="text-center">
 			<div class="text-sm font-bold uppercase">{data.store.name}</div>
