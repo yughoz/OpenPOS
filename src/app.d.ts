@@ -3,6 +3,9 @@
 import type { AuthUser } from '$lib/server/auth';
 
 declare global {
+	// di-inject Vite (define.__APP_VERSION__ dari package.json)
+	const __APP_VERSION__: string;
+
 	namespace App {
 		// interface Error {}
 		interface Locals {

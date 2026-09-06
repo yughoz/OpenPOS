@@ -3,8 +3,14 @@ import adapterNode from '@sveltejs/adapter-node';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { defineConfig } from 'vite';
+import pkg from './package.json';
 
 export default defineConfig({
+	// Versi app dari package.json — dipakai UI lewat global __APP_VERSION__
+	// (tersedia di client & SSR; dideklarasikan di src/app.d.ts).
+	define: {
+		__APP_VERSION__: JSON.stringify(pkg.version)
+	},
 	server: {
 		host: '127.0.0.1',
 		port: 8791,

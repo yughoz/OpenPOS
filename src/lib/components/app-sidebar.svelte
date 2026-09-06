@@ -130,7 +130,10 @@
 								<StoreIcon class="size-4" />
 							</div>
 							<div class="grid flex-1 text-left text-sm leading-tight">
-								<span class="truncate font-semibold">{m['app.name']()}</span>
+								<div class="flex items-center gap-1.5">
+									<span class="truncate font-semibold">{m['app.name']()}</span>
+									<span class="shrink-0 rounded bg-muted px-1 text-[10px] font-medium text-muted-foreground">v{__APP_VERSION__}</span>
+								</div>
 								<span class="truncate text-xs">{m['app.tagline']()}</span>
 							</div>
 						</a>
