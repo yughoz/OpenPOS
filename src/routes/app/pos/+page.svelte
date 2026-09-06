@@ -124,27 +124,36 @@
 		try {
 			const res = await fetch(`/app/pos/suggest?q=${encodeURIComponent(t)}`);
 			const items = (await res.json()) as ProductLite[];
-			if (seq === suggestSeq) suggestions = items;
+			// buang hasil basi: input sudah berubah/dikosongkan sejak fetch dikirim
+			if (seq === suggestSeq && term.trim() === t) suggestions = items;
 		} catch {
-			if (seq === suggestSeq) suggestions = [];
+			if (seq === suggestSeq && term.trim() === t) suggestions = [];
 		}
 	}
 
-	function onTermInput() {
-		suggestionIdx = -1;
+	/** Tutup list + batalkan fetch yang masih di-flight (mencegah list muncul lagi setelah scan). */
+	function clearSuggestions() {
 		if (suggestTimer) clearTimeout(suggestTimer);
+		suggestTimer = null;
+		suggestSeq++;
+		suggestionIdx = -1;
+		suggestions = [];
+	}
+
+	function onTermInput() {
 		const t = term.trim();
 		if (!t) {
-			suggestions = [];
+			clearSuggestions();
 			return;
 		}
+		if (suggestTimer) clearTimeout(suggestTimer);
+		suggestionIdx = -1;
 		suggestTimer = setTimeout(() => loadSuggestions(t), 200);
 	}
 
 	async function chooseSuggestion(p: ProductLite) {
 		term = p.barcode || p.name;
-		suggestionIdx = -1;
-		suggestions = [];
+		clearSuggestions();
 		// pastikan nilai baru sudah tercetak ke <input> sebelum form disubmit,
 		// kalau tidak yang kekirim malah teks ketikan lama (mis. "ber")
 		await tick();
@@ -202,20 +211,24 @@
 				};
 				if (result.type === 'failure') {
 					toast.error(d.error ?? m['pos.fail_add']());
+					await tick();
+					scanEl?.focus();
 					return;
 				}
 				term = '';
 				qty = '1';
-				suggestionIdx = -1;
-				suggestions = [];
-				scanEl?.focus();
+				// batalkan fetch suggest yang masih di-flight supaya list tidak muncul lagi
+				clearSuggestions();
 				// nota BARU dibuat (setelah Hold / layar kosong) → pindah ke nota itu.
 				// tambahan ke nota yang sama → cukup invalidate data.
 				if (result.type === 'success' && d.isNew && d.txId) {
 					await goto(`/app/pos?tx=${d.txId}`, { replaceState: true });
-					return;
+				} else {
+					await update({ reset: false });
 				}
-				await update({ reset: false });
+				// fokus dikembalikan SETELAH semua re-render selesai (scan berikutnya langsung bisa)
+				await tick();
+				scanEl?.focus();
 			};
 	};
 
@@ -261,6 +274,9 @@
 					else await goto('/app/pos?tx=none', { replaceState: true });
 				}
 			}
+			// transaksi baru selesai — langsung siap scan berikutnya
+			await tick();
+			scanEl?.focus();
 		};
 
 	const heldVoidEnhance = (): SubmitFunction =>
