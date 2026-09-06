@@ -52,10 +52,10 @@
 	<!-- struk thermal, lebar sesuai setting (58/80mm);
 		lebar < kertas (border-box, termasuk padding) agar muat area cetak printer -->
 	<div
-		class="mx-auto bg-white p-2 font-mono leading-snug text-black print:p-0 {data.receiptSize === 58 ? 'w-[54mm] text-[10px] print:text-[9px]' : 'w-[74mm] text-[11px] print:text-[10px]'}"
+		class="mx-auto bg-white p-2 font-mono leading-snug text-black print:p-0 {data.receiptSize === 58 ? 'w-[54mm] text-xs print:text-[11px]' : 'w-[74mm] text-sm print:text-[13px]'}"
 	>
 		<div class="text-center">
-			<div class="text-sm font-bold uppercase">{data.store.name}</div>
+			<div class="text-base font-bold uppercase">{data.store.name}</div>
 			{#if data.store.description}<div>{data.store.description}</div>{/if}
 			{#if data.store.phone}<div>Telp. {data.store.phone}</div>{/if}
 		</div>
@@ -86,15 +86,11 @@
 		<div class="my-1 border-t border-dashed border-black"></div>
 
 		{#each data.items as item (item.id)}
-			<div class="flex justify-between">
-				<span class="truncate">{item.qty}x {item.product_name}</span>
-				<span class="tabular-nums">{formatNumber(item.final_price)}</span>
-			</div>
+			<!-- nama produk wrap, harga di baris bawah rata kanan -->
+			<div class="break-words">{item.qty}x {item.product_name}</div>
+			<div class="text-right tabular-nums">{formatNumber(item.final_price)}</div>
 			{#if item.discount > 0}
-				<div class="flex justify-between text-[10px]">
-					<span class="pl-3">(diskon @ {formatNumber(item.discount)})</span>
-					<span class="tabular-nums">-{formatNumber(item.discount)}</span>
-				</div>
+				<div class="text-right tabular-nums">-{formatNumber(item.discount)}</div>
 			{/if}
 		{/each}
 
@@ -110,7 +106,7 @@
 				<span class="tabular-nums">-{formatNumber(data.tx.total_discount)}</span>
 			</div>
 		{/if}
-		<div class="flex justify-between text-sm font-bold">
+		<div class="flex justify-between text-base font-bold">
 			<span>TOTAL</span>
 			<span class="tabular-nums">{formatRupiah(data.tx.total_final)}</span>
 		</div>
