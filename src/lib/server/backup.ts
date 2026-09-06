@@ -45,11 +45,21 @@ export async function restoreBackup(name: string): Promise<void> {
 	await admin.backups.restore(name, { requestKey: null, timeout: 120_000 });
 }
 
-/** Restore dari file ZIP yang diunggah user (diteruskan ke /api/backups/upload). */
+/** Restore dari file ZIP yang diunggah user (diteruskan ke /api/backups/upload).
+ * PB hanya menerima nama backup [a-z0-9._-] berakhiran .zip — nama file dari
+ * browser sering mengandung spasi/kurung/huruf besar ("bu (1).ZIP"), jadi
+ * nama disanitasi dulu. */
 export async function restoreBackupUpload(file: File): Promise<void> {
 	const admin = await pbAdmin();
+	const safeName = (file.name || '')
+		.toLowerCase()
+		.replace(/[^a-z0-9._-]+/g, '-')
+		.replace(/-+/g, '-')
+		.replace(/^-|-$/g, '');
+	const finalName = safeName.endsWith('.zip') ? safeName : `${safeName || 'upload'}.zip`;
+	const clean = new File([file], finalName, { type: 'application/zip' });
 	const form = new FormData();
-	form.append('file', file, file.name || 'backup.zip');
+	form.append('file', clean, finalName);
 	await admin.backups.upload(form, { requestKey: null, timeout: 180_000 });
 }
 
